@@ -109,8 +109,8 @@ void mqtt_on_message(void *arg, const u8_t *data, u16_t len, u8_t flags) {
     printf("Data received (mqtt_on_message): %.*s\n", (int)len, data);
     #endif
     
-    xor_encrypt(data, msg_decrypted, len, CIPHER_KEY); // Exemplo de criptografia
-    if (sscanf(msg_decrypted, "{\"valor\":%f,\"ts\":%lu}", &value, &new_timestamp) != 2) {
+    // xor_encrypt(data, msg_decrypted, len, CIPHER_KEY); // Exemplo de criptografia
+    if (sscanf(data, "{\"valor\":%f,\"ts\":%lu}", &value, &new_timestamp) != 2) {
         #ifdef DEBUG_MQTT
         printf("Erro no parse da mensagem! (%.1f) (%lu)\n", value, new_timestamp);
         #endif

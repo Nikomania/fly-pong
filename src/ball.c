@@ -11,16 +11,17 @@ void ball_init(SIDE_t side) {
     ball.y = INITIAL_BALL_Y;
     ball.dx = INITIAL_BALL_DX;
     ball.dy = INITIAL_BALL_DY;
+    ball.speed = INITIAL_BALL_SPEED;
     ball.side = side;
 }
 
 SIDE_t ball_move() {
     // Atualiza a posição da bola
-    ball.x += ball.dx;
-    ball.y += ball.dy;
+    ball.x += ball.speed * ball.dx;
+    ball.y += ball.speed * ball.dy;
 
     // Verifica colisão com as bordas
-    if (ball.x < 0 || ball.x >= LED_MATRIX_WIDTH-1) {
+    if (ball.x <= 0 || ball.x >= LED_MATRIX_WIDTH-1) {
         ball.dx = -ball.dx; // Inverte a direção horizontal
     }
 
@@ -40,7 +41,6 @@ SIDE_t ball_move() {
         if (ball.x + ball.dx == bar_pos || ball.x + ball.dx == bar_pos + BAR_SIZE - 1) {
             ball.dy = -ball.dy; // Inverte a direção vertical ao colidir com a barra
             ball.dx = -ball.dx; // Inverte a direção horizontal se a bola está indo para a barra
-            return ball.side; // Sai da função após a colisão
         }
     }
 

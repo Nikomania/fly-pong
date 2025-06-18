@@ -8,6 +8,7 @@
 #define INITIAL_BALL_Y 4
 #define INITIAL_BALL_DX 1
 #define INITIAL_BALL_DY -1
+#define INITIAL_BALL_SPEED 1
 
 #define BAR_SIZE 2
 
@@ -26,6 +27,7 @@ typedef struct Ball_t {
   int x,y;
   int8_t dx,dy;
   SIDE_t side;
+  int speed;
 } Ball_t;
 
 extern Ball_t ball;
