@@ -34,7 +34,7 @@ SET(ProjectName fly_pong)
 include(pico_sdk_import.cmake)
 include(${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
 
-project(${ProjectName} C CXX ASM)
+project(fly_pong C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
@@ -51,6 +51,7 @@ add_executable(${ProjectName}
     src/led_rgb.c
     src/button.c
     src/buzzer.c
+    src/ball.c
 )
 
 pico_set_program_name(${ProjectName} "fly_pong")
