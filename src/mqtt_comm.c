@@ -3,13 +3,14 @@
 #include "lwipopts.h"             // Configurações customizadas do lwIP
 #include "xor_cipher.h"
 #include "string.h"
+#include "ball.h"
 
 /* Variável global estática para armazenar a instância do cliente MQTT
  * 'static' limita o escopo deste arquivo */
 static mqtt_client_t *client;
 static bool is_connected = false;  // Flag para verificar conexão
-static unsigned long int last_timestamp_received = 0;
-static float last_value_received = 0.0;
+static uint64_t last_timestamp_received = 0;
+static Ball_t last_ball;
 static char last_topic_received[MAX_BYTES_RECEIVED];  // Tópico da última mensagem recebida
 static bool has_new_value = false;
 static bool has_new_topic = false;
@@ -104,40 +105,33 @@ void mqtt_on_request(void *arg, err_t err) {
 void mqtt_on_message(void *arg, const u8_t *data, u16_t len, u8_t flags) {
     unsigned long int new_timestamp = 0;
     char msg_decrypted[MAX_BYTES_RECEIVED];
-    float value = 0.0;
+    Ball_t received;
     #ifdef DEBUG_MQTT
     printf("Data received (mqtt_on_message): %.*s\n", (int)len, data);
     #endif
     
     // xor_encrypt(data, msg_decrypted, len, CIPHER_KEY); // Exemplo de criptografia
-    if (sscanf(data, "{\"valor\":%f,\"ts\":%lu}", &value, &new_timestamp) != 2) {
+    if (sscanf(data, "%d,%d,%d,%d,%d", &received.x, &received.y, &received.dx, &received.dy, &received.side) != 5) {
         #ifdef DEBUG_MQTT
-        printf("Erro no parse da mensagem! (%.1f) (%lu)\n", value, new_timestamp);
+        printf("Erro no parse da mensagem! (%s)\n", data);
         #endif
         return;
     }
 
-    if (new_timestamp > last_timestamp_received) {
-        last_timestamp_received = new_timestamp;
-        #ifdef DEBUG_MQTT
-        printf("(mqtt_on_message) Nova leitura: %.2f (ts: %lu)\n", value, new_timestamp);
-        #endif
-       
-        // --> Processar dados aqui <--
-        has_new_value = true;  // Marca que há novos dados disponíveis
-        last_value_received = value;  // Atualiza o último valor recebido
-    } else {
-        #ifdef DEBUG_MQTT
-        printf("Replay detectado (ts: %lu <= %lu)\n",
-              new_timestamp, last_timestamp_received);
-        #endif
-    }
+    last_timestamp_received = new_timestamp;
+    #ifdef DEBUG_MQTT
+    //printf("(mqtt_on_message) Nova leitura: %.2f (ts: %lu)\n", value, new_timestamp);
+    #endif
+    
+    // --> Processar dados aqui <--
+    has_new_value = true;  // Marca que há novos dados disponíveis
+    last_ball = received;
 }
 
-float mqtt_get_last_value(void) {
-    // Retorna o último valor recebido
-    has_new_value = false;  // Reseta a flag de novos dados
-    return last_value_received;
+Ball_t mqtt_get_last_ball(void) {
+    // Retorna a bola atual (exemplo de uso)
+    has_new_value = false;
+    return last_ball;
 }
 
 unsigned long int mqtt_get_last_timestamp(void) {

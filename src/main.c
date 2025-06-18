@@ -22,6 +22,20 @@
 #define PORT 1883
 #define IP "192.168.131.35"
 
+#define MY_SIDE FLY
+
+#if (MYSIDE == FLY)
+#define MQTT_NAME "fly"
+#define MQTT_SEND_ROOM "fly-pong/room1/fly"
+#define MQTT_RECEIVE_ROOM "fly-pong/room1/pong"
+#elif (MYSIDE == PONG)
+#define MQTT_NAME "pong"
+#define MQTT_SEND_ROOM "fly-pong/room1/pong"
+#define MQTT_RECEIVE_ROOM "fly-pong/room1/fly"
+#endif
+
+bool connected = false; // Flag para verificar se a conexão foi estabelecida
+
 void game_task(void *pvParameters);
 void wifi_conn_task(void *pvParameters);
 
@@ -31,8 +45,8 @@ int main() {
 
     init_button(BTN_A);
     init_button(BTN_B);
-    side = FLY;
-    ball_init(side);
+    side = MY_SIDE;
+    ball_init(INITIAL_BALL_SIDE);
     initLedMatrix();
 
     xTaskCreate(
@@ -61,6 +75,7 @@ int main() {
 }
 
 void game_task(void *pvParameters) {
+    while (!connected);
     while (true) {
         game_tick(); // Atualiza o estado do jogo
         game_render(); // Renderiza o estado do jogo no LED Matrix
@@ -86,7 +101,7 @@ void wifi_conn_task(void *pvParameters) {
     #ifdef DEBUG
     printf("Configurando MQTT...\n");
     #endif
-    if (mqtt_setup("bitdog1", IP, PORT, MOSQUITTO_USER, MOSQUITTO_PASSWORD)) {
+    if (mqtt_setup(MQTT_NAME, IP, PORT, MOSQUITTO_USER, MOSQUITTO_PASSWORD)) {
         #ifdef DEBUG
         printf("MQTT configurado com sucesso!\n");
         #endif
@@ -103,26 +118,31 @@ void wifi_conn_task(void *pvParameters) {
     #endif
 
     mqtt_comm_subscribe(
-        "fly-pong/room1",  // Tópico a ser assinado
+        MQTT_RECEIVE_ROOM,  // Tópico a ser assinado
         mqtt_on_request,                        // Callback de confirmação de assinatura
         mqtt_on_incoming_publish,                         // Callback de dados
         mqtt_on_message            // Callback para mensagens recebidas
     );
 
+    connected = true; // Marca que a conexão foi estabelecida
     while(true) {
-        if (mqtt_has_new_data()) {
+        if (mqtt_has_new_data() && ball.side != side) {
             // Se houver novos dados, processa a mensagem recebida
             const char *topic = mqtt_get_last_topic();
-            float value = mqtt_get_last_value();
+            ball = mqtt_get_last_ball(); // Obtém a bola do MQTT
             unsigned long int timestamp = mqtt_get_last_timestamp();
 
             #ifdef DEBUG
-            printf("Mensagem recebida no tópico '%s': valor=%.2f, timestamp=%lu\n", topic, value, timestamp);
+            //printf("Mensagem recebida no tópico '%s': valor=%.2f, timestamp=%lu\n", topic, value, timestamp);
             #endif
-
-            // Aqui você pode adicionar lógica para processar a mensagem recebida
-            // Por exemplo, atualizar o estado do jogo ou enviar uma resposta
         }
-        vTaskDelay(pdMS_TO_TICKS(1000)); // Aguarda 1 segundo antes da próxima iteração
+
+        if (ball.side == side) {
+            uint8_t data[64];
+            sprintf(data ,"%u,%u,%i,%i,%u", ball.x, ball.y, ball.dx, ball.dy, ball.side);
+            mqtt_comm_publish(MQTT_SEND_ROOM, data, strlen(data) + 1); // Publica a bola atualizada no tópico MQTT
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(TICK_DELAY)); // Aguarda 1 segundo antes da próxima iteração
     }
 }
