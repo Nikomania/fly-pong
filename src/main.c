@@ -22,19 +22,21 @@
 #define PORT 1883
 #define IP "192.168.131.35"
 
-#define MY_SIDE FLY
+#define MY_SIDE_FLY 1
 
-#if (MYSIDE == FLY)
+#ifdef MY_SIDE_FLY
+#define MY_SIDE FLY
 #define MQTT_NAME "fly"
 #define MQTT_SEND_ROOM "fly-pong/room1/fly"
 #define MQTT_RECEIVE_ROOM "fly-pong/room1/pong"
-#elif (MYSIDE == PONG)
+#elif MY_SIDE_PONG
+#define MY_SIDE PONG
 #define MQTT_NAME "pong"
 #define MQTT_SEND_ROOM "fly-pong/room1/pong"
 #define MQTT_RECEIVE_ROOM "fly-pong/room1/fly"
 #endif
 
-bool connected = false; // Flag para verificar se a conexão foi estabelecida
+volatile bool connected = false; // Flag para verificar se a conexão foi estabelecida
 
 void game_task(void *pvParameters);
 void wifi_conn_task(void *pvParameters);
@@ -101,7 +103,7 @@ void wifi_conn_task(void *pvParameters) {
     #ifdef DEBUG
     printf("Configurando MQTT...\n");
     #endif
-    if (mqtt_setup(MQTT_NAME, IP, PORT, MOSQUITTO_USER, MOSQUITTO_PASSWORD)) {
+    if (mqtt_setup(MQTT_NAME, IP, PORT, MQTT_NAME, MOSQUITTO_PASSWORD)) {
         #ifdef DEBUG
         printf("MQTT configurado com sucesso!\n");
         #endif
@@ -125,6 +127,7 @@ void wifi_conn_task(void *pvParameters) {
     );
 
     connected = true; // Marca que a conexão foi estabelecida
+    SIDE_t last_side = ball.side;
     while(true) {
         if (mqtt_has_new_data() && ball.side != side) {
             // Se houver novos dados, processa a mensagem recebida
@@ -137,12 +140,13 @@ void wifi_conn_task(void *pvParameters) {
             #endif
         }
 
-        if (ball.side == side) {
+        if (ball.side == side || last_side != ball.side) {
             uint8_t data[64];
             sprintf(data ,"%u,%u,%i,%i,%u", ball.x, ball.y, ball.dx, ball.dy, ball.side);
             mqtt_comm_publish(MQTT_SEND_ROOM, data, strlen(data) + 1); // Publica a bola atualizada no tópico MQTT
         }
 
         vTaskDelay(pdMS_TO_TICKS(TICK_DELAY)); // Aguarda 1 segundo antes da próxima iteração
+        last_side = ball.side; // Atualiza o último lado da bola
     }
 }

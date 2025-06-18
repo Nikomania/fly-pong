@@ -27,6 +27,7 @@ SIDE_t ball_move() {
 
     if (ball.y >= LED_MATRIX_HEIGHT) {
         ball.side = (ball.side == FLY) ? PONG : FLY; // Troca o lado da bola
+        ball.dy = -ball.dy; // Inverte a direção vertical
         return ball.side; // Sai da função após a colisão
     }
 
