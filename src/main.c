@@ -82,6 +82,7 @@ void game_task(void *pvParameters) {
         int sequence[4][2] = {{1, 2}, {2, 3}, {3, 2}, {2, 1}};
         clear();
         setLED(sequence[i][0], sequence[i][1], BLUE);
+        render();
         if (++i > 3) i=0;
         vTaskDelay(pdMS_TO_TICKS(TICK_DELAY)); // Aguarda um tempo antes da próxima iteração
     }

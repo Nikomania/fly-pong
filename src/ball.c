@@ -88,9 +88,11 @@ void game_tick() {
         // Se a bola não é do lado do jogador, não faz nada
         return;
     }
-    // Move a bola
-    ball_move();
 
+    static bool updating = true;
+    if (updating) 
+        ball_move();
+    updating = !updating; 
 
     // Verifica se a bola saiu da tela
     if (ball.y < 0) {

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define TICK_DELAY 250
+#define TICK_DELAY 125
 #define INITIAL_BALL_X 2
 #define INITIAL_BALL_Y 4
 #define INITIAL_BALL_DX 1
