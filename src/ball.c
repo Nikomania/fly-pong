@@ -1,6 +1,8 @@
 #include "ball.h"
 #include "button.h"
 #include "led_matrix.h"
+#include "pico/rand.h"
+
 
 SIDE_t side;
 uint8_t bar_pos = 0;
@@ -8,9 +10,13 @@ uint8_t bar_y = 0;
 Ball_t ball;
 
 void ball_init(SIDE_t side) {
-    ball.x = INITIAL_BALL_X;
+    ball.x = get_rand_32() % LED_MATRIX_WIDTH;
     ball.y = INITIAL_BALL_Y;
-    ball.dx = INITIAL_BALL_DX;
+    ball.dx = (get_rand_32() % 2 == 0) ? 1 : -1;
+    if (ball.x == 0)
+        ball.dx = 1; // Garante que a bola não comece na borda esquerda
+    else if (ball.x == LED_MATRIX_WIDTH - 1)
+        ball.dx = -1; // Garante que a bola não comece na borda direita
     ball.dy = INITIAL_BALL_DY;
     ball.speed = INITIAL_BALL_SPEED;
     ball.side = side;
@@ -22,7 +28,7 @@ SIDE_t ball_move() {
     ball.y += ball.speed * ball.dy;
 
     // Verifica colisão com as bordas
-    if (ball.x <= 0 || ball.x >= LED_MATRIX_WIDTH-1) {
+    if ((ball.x <= 0 && ball.dx < 0) || (ball.x >= LED_MATRIX_WIDTH-1 && ball.dx > 0) ) {
         ball.dx = -ball.dx; // Inverte a direção horizontal
     }
 
@@ -53,10 +59,10 @@ SIDE_t ball_move() {
 
 void game_tick() {
     if (read_button(BTN_A) == BTN_PRESSED && read_button(BTN_B) == BTN_PRESSED) {
-        if (bar_y == 1) {
+        if (bar_y == 2) {
             bar_y = 0;
         } else {
-            bar_y = 1;
+            bar_y += 1;
         }
     } else if (read_button(BTN_A) == BTN_PRESSED) {
         // Move a barra do jogador para a esquerda

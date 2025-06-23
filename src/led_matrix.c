@@ -1,5 +1,5 @@
 #include "led_matrix.h"
-
+#include "task.h"
 
 COLORS led_matrix[LED_COUNT_X][LED_COUNT_Y] = {0};
 PIO led_matrix_pio;
@@ -84,7 +84,8 @@ void render() {
       );
     }
   }
-  sleep_us(100); // wait for 100us, RESET signal from datasheet
+  vTaskDelay(pdMS_TO_TICKS(1)); // wait for 1ms to ensure the data is sent
+  //sleep_us(100); // wait for 100us, RESET signal from datasheet
 }
 
 // setLED(0, 4, color); setLED(1, 4, color); setLED(2, 4, color); setLED(3, 4, color); setLED(4, 4, color);

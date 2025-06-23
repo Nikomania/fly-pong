@@ -147,7 +147,7 @@ void wifi_conn_task(void *pvParameters) {
             // Se houver novos dados, processa a mensagem recebida
             const char *topic = mqtt_get_last_topic();
             ball = mqtt_get_last_ball(); // Obtém a bola do MQTT
-            unsigned long int timestamp = mqtt_get_last_timestamp();
+            //unsigned long int timestamp = mqtt_get_last_timestamp();
 
             #ifdef DEBUG
             //printf("Mensagem recebida no tópico '%s': valor=%.2f, timestamp=%lu\n", topic, value, timestamp);
