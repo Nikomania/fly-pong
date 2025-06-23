@@ -7,7 +7,15 @@
 SIDE_t side;
 uint8_t bar_pos = 0;
 uint8_t bar_y = 0;
-Ball_t ball;
+Ball_t ball = {
+    .x = INITIAL_BALL_X,
+    .y = INITIAL_BALL_Y,
+    .dx = INITIAL_BALL_DX,
+    .dy = INITIAL_BALL_DY,
+    .side = INITIAL_BALL_SIDE,
+    .speed = INITIAL_BALL_SPEED,
+    .points = {0, 0}
+};
 
 void ball_init(SIDE_t side) {
     ball.x = get_rand_32() % LED_MATRIX_WIDTH;
@@ -86,6 +94,7 @@ void game_tick() {
 
     // Verifica se a bola saiu da tela
     if (ball.y < 0) {
+        ball.points[!side]++;
         // Reinicia a posição da bola
         ball_init(side);
     }

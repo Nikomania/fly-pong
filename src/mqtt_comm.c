@@ -111,7 +111,7 @@ void mqtt_on_message(void *arg, const u8_t *data, u16_t len, u8_t flags) {
     #endif
     
     // xor_encrypt(data, msg_decrypted, len, CIPHER_KEY); // Exemplo de criptografia
-    if (sscanf(data, "%d,%d,%d,%d,%d", &received.x, &received.y, &received.dx, &received.dy, &received.side) != 5) {
+    if (sscanf(data, "%d,%d,%d,%d,%d,%d,%d", &received.x, &received.y, &received.dx, &received.dy, &received.side, &received.points[FLY], &received.points[PONG]) != 7) {
         #ifdef DEBUG_MQTT
         printf("Erro no parse da mensagem! (%s)\n", data);
         #endif

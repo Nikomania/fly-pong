@@ -30,6 +30,7 @@ typedef struct Ball_t {
   int dx,dy;
   SIDE_t side;
   int speed;
+  int points[2];
 } Ball_t;
 
 extern Ball_t ball;
