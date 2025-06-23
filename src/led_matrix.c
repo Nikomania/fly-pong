@@ -1,4 +1,5 @@
 #include "led_matrix.h"
+#include "FreeRTOS.h"
 #include "task.h"
 
 COLORS led_matrix[LED_COUNT_X][LED_COUNT_Y] = {0};
