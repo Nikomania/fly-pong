@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define TICK_DELAY 500
+#define TICK_DELAY 250
 #define INITIAL_BALL_X 2
 #define INITIAL_BALL_Y 4
 #define INITIAL_BALL_DX 1
@@ -11,7 +11,7 @@
 #define INITIAL_BALL_SPEED 1
 #define INITIAL_BALL_SIDE FLY
 
-#define BAR_SIZE 2
+#define BAR_SIZE 1
 
 #define LED_MATRIX_WIDTH 5
 #define LED_MATRIX_HEIGHT 5
@@ -23,6 +23,7 @@ typedef enum SIDE_t {
 
 extern SIDE_t side;
 extern uint8_t bar_pos;
+extern uint8_t bar_y;
 
 typedef struct Ball_t {
   int x,y;

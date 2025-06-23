@@ -129,7 +129,21 @@ void wifi_conn_task(void *pvParameters) {
     connected = true; // Marca que a conexão foi estabelecida
     SIDE_t last_side = ball.side;
     while(true) {
-        if (mqtt_has_new_data() && ball.side != side) {
+        if (ball.side == side || last_side != ball.side) {
+            uint8_t data[64];
+            sprintf(data ,"%u,%u,%i,%i,%u", ball.x, ball.y, ball.dx, ball.dy, ball.side);
+            bool success = mqtt_comm_publish(MQTT_SEND_ROOM, data, strlen(data) + 1); // Publica a bola atualizada no tópico MQTT
+            if (last_side != ball.side) {
+                while (!success) {
+                    #ifdef DEBUG
+                    printf("Falha ao publicar no MQTT, tentando novamente...\n");
+                    #endif
+                    success = mqtt_comm_publish(MQTT_SEND_ROOM, data, strlen(data) + 1); // Tenta publicar novamente
+                    if (!success)
+                        vTaskDelay(pdMS_TO_TICKS(TICK_DELAY));
+                }
+            }
+        } else if (mqtt_has_new_data() && ball.side != side) {
             // Se houver novos dados, processa a mensagem recebida
             const char *topic = mqtt_get_last_topic();
             ball = mqtt_get_last_ball(); // Obtém a bola do MQTT
@@ -139,14 +153,7 @@ void wifi_conn_task(void *pvParameters) {
             //printf("Mensagem recebida no tópico '%s': valor=%.2f, timestamp=%lu\n", topic, value, timestamp);
             #endif
         }
-
-        if (ball.side == side || last_side != ball.side) {
-            uint8_t data[64];
-            sprintf(data ,"%u,%u,%i,%i,%u", ball.x, ball.y, ball.dx, ball.dy, ball.side);
-            mqtt_comm_publish(MQTT_SEND_ROOM, data, strlen(data) + 1); // Publica a bola atualizada no tópico MQTT
-        }
-
-        vTaskDelay(pdMS_TO_TICKS(TICK_DELAY)); // Aguarda 1 segundo antes da próxima iteração
         last_side = ball.side; // Atualiza o último lado da bola
+        vTaskDelay(pdMS_TO_TICKS(TICK_DELAY));
     }
 }

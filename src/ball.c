@@ -3,7 +3,8 @@
 #include "led_matrix.h"
 
 SIDE_t side;
-uint8_t bar_pos;
+uint8_t bar_pos = 0;
+uint8_t bar_y = 0;
 Ball_t ball;
 
 void ball_init(SIDE_t side) {
@@ -28,11 +29,12 @@ SIDE_t ball_move() {
     if (ball.y >= LED_MATRIX_HEIGHT) {
         ball.side = (ball.side == FLY) ? PONG : FLY; // Troca o lado da bola
         ball.dy = -ball.dy; // Inverte a direção vertical
+        ball.y = LED_MATRIX_HEIGHT - 1;
         return ball.side; // Sai da função após a colisão
     }
 
     // Verifica colisão com a barra do jogador
-    if (ball.side == side && ball.y == 1) {
+    if (ball.side == side && ball.y == bar_y+1) {
         for (int i = 0; i < BAR_SIZE; i++) {
             if (ball.x == bar_pos + i) {
                 ball.dy = -ball.dy; // Inverte a direção vertical ao colidir com a barra
@@ -50,13 +52,18 @@ SIDE_t ball_move() {
 }
 
 void game_tick() {
-    if (read_button(BTN_A) == BTN_PRESSED) {
+    if (read_button(BTN_A) == BTN_PRESSED && read_button(BTN_B) == BTN_PRESSED) {
+        if (bar_y == 1) {
+            bar_y = 0;
+        } else {
+            bar_y = 1;
+        }
+    } else if (read_button(BTN_A) == BTN_PRESSED) {
         // Move a barra do jogador para a esquerda
         if (bar_pos > 0) {
             bar_pos--;
         }
-    }
-    if (read_button(BTN_B) == BTN_PRESSED) {
+    } else if (read_button(BTN_B) == BTN_PRESSED) {
         // Move a barra do jogador para a direita
         if (bar_pos < LED_MATRIX_WIDTH - BAR_SIZE) {
             bar_pos++;
@@ -99,7 +106,7 @@ void game_render() {
 
     // Desenha a barra do jogador
     for (int i = 0; i < BAR_SIZE; i++) {
-        setLED(bar_pos + i, 0, BLUE);
+        setLED(bar_pos + i, bar_y, BLUE);
     }
 
     // Renderiza a matriz de LEDs
