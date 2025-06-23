@@ -14,7 +14,8 @@ Ball_t ball = {
     .dy = INITIAL_BALL_DY,
     .side = INITIAL_BALL_SIDE,
     .speed = INITIAL_BALL_SPEED,
-    .points = {0, 0}
+    .points = {0, 0},
+    .initializing = INIT_BALL_TICKS
 };
 
 void ball_init(SIDE_t side) {
@@ -28,9 +29,15 @@ void ball_init(SIDE_t side) {
     ball.dy = INITIAL_BALL_DY;
     ball.speed = INITIAL_BALL_SPEED;
     ball.side = side;
+    ball.initializing = INIT_BALL_TICKS;
 }
 
 SIDE_t ball_move() {
+    if (ball.initializing) {
+        // Se a bola está inicializando, não faz nada
+        ball.initializing--;
+        return ball.side; // Retorna o lado da bola sem fazer movimento
+    }
     // Atualiza a posição da bola
     ball.x += ball.speed * ball.dx;
     ball.y += ball.speed * ball.dy;
@@ -90,7 +97,7 @@ void game_tick() {
     }
 
     static bool updating = true;
-    if (updating) 
+    if (updating)
         ball_move();
     updating = !updating; 
 
@@ -110,7 +117,7 @@ void game_render() {
     // Desenha a bola
     if (ball.side == side) {
         // Se a bola é do lado do jogador, desenha-a
-        setLED(ball.x, ball.y, WHITE);
+        setLED(ball.x, ball.y, ball.initializing ? YELLOW : WHITE);
     } else {
         // Se a bola é do lado do oponente, desenha-a em branco
         if (ball_on) {

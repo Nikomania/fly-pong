@@ -2,6 +2,7 @@
 #define BALL_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define TICK_DELAY 125
 #define INITIAL_BALL_X 2
@@ -12,6 +13,8 @@
 #define INITIAL_BALL_SIDE FLY
 
 #define BAR_SIZE 1
+
+#define INIT_BALL_TICKS 4
 
 #define LED_MATRIX_WIDTH 5
 #define LED_MATRIX_HEIGHT 5
@@ -31,6 +34,7 @@ typedef struct Ball_t {
   SIDE_t side;
   int speed;
   int points[2];
+  int initializing;
 } Ball_t;
 
 extern Ball_t ball;
