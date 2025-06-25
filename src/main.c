@@ -86,7 +86,7 @@ void game_task(void *pvParameters) {
     while (!connected) {
         int sequence[4][2] = {{1, 2}, {2, 3}, {3, 2}, {2, 1}};
         clear();
-        renderLedMatrix();
+
         if (++i > 3) i=0;
 
         if (error) {
@@ -95,6 +95,7 @@ void game_task(void *pvParameters) {
             setLED(sequence[i][0], sequence[i][1], BLUE);
         }
 
+        renderLedMatrix();
         vTaskDelay(pdMS_TO_TICKS(TICK_DELAY)); // Aguarda um tempo antes da próxima iteração
     }
     while (true) {
