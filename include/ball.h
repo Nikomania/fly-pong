@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define TICK_DELAY 125
+#define TICK_DELAY 62
 #define INITIAL_BALL_X 2
 #define INITIAL_BALL_Y 4
 #define INITIAL_BALL_DX 1
@@ -12,7 +12,7 @@
 #define INITIAL_BALL_SPEED 1
 #define INITIAL_BALL_SIDE FLY
 
-#define BAR_SIZE 1
+#define BAR_SIZE 2
 
 #define INIT_BALL_TICKS 4
 

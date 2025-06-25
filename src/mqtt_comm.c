@@ -105,7 +105,15 @@ void mqtt_on_request(void *arg, err_t err) {
 void mqtt_on_message(void *arg, const u8_t *data, u16_t len, u8_t flags) {
     unsigned long int new_timestamp = 0;
     char msg_decrypted[MAX_BYTES_RECEIVED];
-    Ball_t received;
+    Ball_t received = {
+        .y = INITIAL_BALL_Y,
+        .x = INITIAL_BALL_X,
+        .dx = INITIAL_BALL_DX,
+        .dy = INITIAL_BALL_DY,
+        .points = {0, 0},
+        .side = side,
+        .speed = INITIAL_BALL_SPEED,
+    };
     #ifdef DEBUG_MQTT
     printf("Data received (mqtt_on_message): %.*s\n", (int)len, data);
     #endif

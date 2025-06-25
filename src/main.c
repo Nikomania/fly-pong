@@ -38,6 +38,7 @@
 #endif
 
 volatile bool connected = false; // Flag para verificar se a conexão foi estabelecida
+volatile bool error = false;
 
 void game_task(void *pvParameters);
 void wifi_conn_task(void *pvParameters);
@@ -85,9 +86,15 @@ void game_task(void *pvParameters) {
     while (!connected) {
         int sequence[4][2] = {{1, 2}, {2, 3}, {3, 2}, {2, 1}};
         clear();
-        setLED(sequence[i][0], sequence[i][1], BLUE);
         renderLedMatrix();
         if (++i > 3) i=0;
+
+        if (error) {
+            setCross(RED);
+        } else {
+            setLED(sequence[i][0], sequence[i][1], BLUE);
+        }
+
         vTaskDelay(pdMS_TO_TICKS(TICK_DELAY)); // Aguarda um tempo antes da próxima iteração
     }
     while (true) {
@@ -106,6 +113,7 @@ void wifi_conn_task(void *pvParameters) {
             #ifdef DEBUG
             printf("Erro ao conectar ao WiFi!\n");
             #endif
+            error = true;
             sleep_ms(1000); // Aguarda indefinidamente se a conexão falhar
         }
     }
@@ -124,6 +132,7 @@ void wifi_conn_task(void *pvParameters) {
             #ifdef DEBUG
             printf("Erro ao configurar MQTT!\n");
             #endif
+            error = true;
             sleep_ms(1000); // Aguarda indefinidamente se a configuração falhar
         }
     }
@@ -131,18 +140,26 @@ void wifi_conn_task(void *pvParameters) {
     printf("MQTT configurado!\n");
     #endif
 
-    mqtt_comm_subscribe(
+    if (!mqtt_comm_subscribe(
         MQTT_RECEIVE_ROOM,  // Tópico a ser assinado
         mqtt_on_request,                        // Callback de confirmação de assinatura
         mqtt_on_incoming_publish,                         // Callback de dados
         mqtt_on_message            // Callback para mensagens recebidas
-    );
+    )) {
+        while(true) {
+            #ifdef DEBUG
+            printf("Erro ao assinar o tópico MQTT!\n");
+            #endif
+            error = true;
+            sleep_ms(1000); // Aguarda indefinidamente se a assinatura falhar
+        }
+    }
 
     connected = true; // Marca que a conexão foi estabelecida
     while(true) {
         if (ball.side == side || change_side) {
             uint8_t data[64];
-            sprintf(data ,"%d,%d,%i,%i,%d,%d,%d", ball.x, ball.y, ball.dx, ball.dy, ball.side, ball.points[FLY], ball.points[PONG]); // Formata os dados da bola
+            sprintf(data ,"%u,%u,%i,%i,%u,%d,%d", ball.x, ball.y, ball.dx, ball.dy, ball.side, ball.points[FLY], ball.points[PONG]); // Formata os dados da bola
             bool pub_success = mqtt_comm_publish(MQTT_SEND_ROOM, data, strlen(data) + 1); // Publica a bola atualizada no tópico MQTT
             if (change_side) {
                 while (!pub_success) {
