@@ -14,11 +14,17 @@ Ball_t ball = {
     .dy = INITIAL_BALL_DY,
     .side = INITIAL_BALL_SIDE,
     .speed = INITIAL_BALL_SPEED,
-    .points = {0, 0},
-    .initializing = INIT_BALL_TICKS
+    .points = {0, 0}
 };
 
-void ball_init(SIDE_t side) {
+#ifdef MY_SIDE_FLY
+int initializing_acc = INIT_BALL_TICKS;
+#else
+int initializing_acc = 0;
+#endif
+
+void ball_init(SIDE_t side)
+{
     ball.x = get_rand_32() % LED_MATRIX_WIDTH;
     ball.y = INITIAL_BALL_Y;
     ball.dx = (get_rand_32() % 2 == 0) ? 1 : -1;
@@ -29,13 +35,13 @@ void ball_init(SIDE_t side) {
     ball.dy = INITIAL_BALL_DY;
     ball.speed = INITIAL_BALL_SPEED;
     ball.side = side;
-    ball.initializing = INIT_BALL_TICKS;
+    initializing_acc = INIT_BALL_TICKS;
 }
 
 SIDE_t ball_move() {
-    if (ball.initializing) {
+    if (initializing_acc) {
         // Se a bola está inicializando, não faz nada
-        ball.initializing--;
+        initializing_acc--;
         return ball.side; // Retorna o lado da bola sem fazer movimento
     }
     // Atualiza a posição da bola
@@ -117,7 +123,7 @@ void game_render() {
     // Desenha a bola
     if (ball.side == side) {
         // Se a bola é do lado do jogador, desenha-a
-        setLED(ball.x, ball.y, ball.initializing ? YELLOW : WHITE);
+        setLED(ball.x, ball.y, initializing_acc ? YELLOW : WHITE);
     } else {
         // Se a bola é do lado do oponente, desenha-a em branco
         if (ball_on) {
