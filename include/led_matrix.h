@@ -13,6 +13,9 @@
 #define LED_COUNT (LED_X_COUNT * LED_Y_COUNT)
 #define LED_MATRIX_PIN 7
 
+#define RGB_INTENSITY_LEVEL 5
+#define RGB_INTENSITY 1 << RGB_INTENSITY_LEVEL
+
 typedef struct rgb_t {
   uint8_t R, G, B;
 } rgb_t;

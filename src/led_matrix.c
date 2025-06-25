@@ -10,13 +10,13 @@ bool was_changed = false;
 
 const rgb_t COLORS_ARRAY[COLORS_COUNT] = {
   {0, 0, 0},
-  {16, 16, 16},
-  {16, 0, 0},
-  {0, 16, 0},
-  {0, 0, 16},
-  {16, 16, 0},
-  {0, 16, 16},
-  {16, 0, 16}
+  {RGB_INTENSITY, RGB_INTENSITY, RGB_INTENSITY},
+  {RGB_INTENSITY, 0, 0},
+  {0, RGB_INTENSITY, 0},
+  {0, 0, RGB_INTENSITY},
+  {RGB_INTENSITY, RGB_INTENSITY, 0},
+  {0, RGB_INTENSITY, RGB_INTENSITY},
+  {RGB_INTENSITY, 0, RGB_INTENSITY}
 };
 
 void initLedMatrix() {

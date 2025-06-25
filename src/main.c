@@ -142,7 +142,7 @@ void wifi_conn_task(void *pvParameters) {
     while(true) {
         if (ball.side == side || change_side) {
             uint8_t data[64];
-            sprintf(data ,"%u,%u,%i,%i,%u,%d,%d", ball.x, ball.y, ball.dx, ball.dy, ball.side, ball.points[FLY], ball.points[PONG]); // Formata os dados da bola
+            sprintf(data ,"%d,%d,%i,%i,%d,%d,%d", ball.x, ball.y, ball.dx, ball.dy, ball.side, ball.points[FLY], ball.points[PONG]); // Formata os dados da bola
             bool pub_success = mqtt_comm_publish(MQTT_SEND_ROOM, data, strlen(data) + 1); // Publica a bola atualizada no tópico MQTT
             if (change_side) {
                 while (!pub_success) {
