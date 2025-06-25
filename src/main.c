@@ -10,6 +10,7 @@
 #include "task.h"
 #include "led_matrix.h"
 #include "ball.h"
+#include "oled.h"
 
 #define DEBUG
 
@@ -50,6 +51,9 @@ int main() {
     side = MY_SIDE;
     ball_init(INITIAL_BALL_SIDE);
     initLedMatrix();
+    init_OLed();
+    clear_OLed();
+    render_OLed();
 
     xTaskCreate(
         wifi_conn_task,          // Função da tarefa
@@ -82,7 +86,7 @@ void game_task(void *pvParameters) {
         int sequence[4][2] = {{1, 2}, {2, 3}, {3, 2}, {2, 1}};
         clear();
         setLED(sequence[i][0], sequence[i][1], BLUE);
-        render();
+        renderLedMatrix();
         if (++i > 3) i=0;
         vTaskDelay(pdMS_TO_TICKS(TICK_DELAY)); // Aguarda um tempo antes da próxima iteração
     }
@@ -135,23 +139,23 @@ void wifi_conn_task(void *pvParameters) {
     );
 
     connected = true; // Marca que a conexão foi estabelecida
-    SIDE_t last_side = ball.side;
     while(true) {
-        if (ball.side == side || last_side != ball.side) {
+        if (ball.side == side || change_side) {
             uint8_t data[64];
             sprintf(data ,"%u,%u,%i,%i,%u,%d,%d", ball.x, ball.y, ball.dx, ball.dy, ball.side, ball.points[FLY], ball.points[PONG]); // Formata os dados da bola
-            bool success = mqtt_comm_publish(MQTT_SEND_ROOM, data, strlen(data) + 1); // Publica a bola atualizada no tópico MQTT
-            if (last_side != ball.side) {
-                while (!success) {
+            bool pub_success = mqtt_comm_publish(MQTT_SEND_ROOM, data, strlen(data) + 1); // Publica a bola atualizada no tópico MQTT
+            if (change_side) {
+                while (!pub_success) {
                     #ifdef DEBUG
                     printf("Falha ao publicar no MQTT, tentando novamente...\n");
                     #endif
-                    success = mqtt_comm_publish(MQTT_SEND_ROOM, data, strlen(data) + 1); // Tenta publicar novamente
-                    if (!success)
+                    pub_success = mqtt_comm_publish(MQTT_SEND_ROOM, data, strlen(data) + 1); // Tenta publicar novamente
+                    if (!pub_success)
                         vTaskDelay(pdMS_TO_TICKS(TICK_DELAY));
                 }
+                change_side = false; // Reseta a flag de mudança de lado
             }
-        } else if (mqtt_has_new_data() && ball.side != side) {
+        } else if (mqtt_has_new_data() && ball.side != side && !change_side) {
             // Se houver novos dados, processa a mensagem recebida
             const char *topic = mqtt_get_last_topic();
             ball = mqtt_get_last_ball(); // Obtém a bola do MQTT
@@ -161,7 +165,6 @@ void wifi_conn_task(void *pvParameters) {
             //printf("Mensagem recebida no tópico '%s': valor=%.2f, timestamp=%lu\n", topic, value, timestamp);
             #endif
         }
-        last_side = ball.side; // Atualiza o último lado da bola
         vTaskDelay(pdMS_TO_TICKS(TICK_DELAY));
     }
 }

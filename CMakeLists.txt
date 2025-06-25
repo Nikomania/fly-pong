@@ -52,6 +52,8 @@ add_executable(${ProjectName}
     src/button.c
     src/buzzer.c
     src/ball.c
+    src/ssd1306_i2c.c
+    src/oled.c
 )
 
 pico_set_program_name(${ProjectName} "fly_pong")
@@ -76,6 +78,7 @@ target_link_libraries(${ProjectName}
         hardware_pio
         hardware_clocks
         hardware_adc
+        hardware_i2c
         # pico_time
         # pico_unique_id
 )

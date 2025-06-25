@@ -61,7 +61,7 @@ void clear() {
     led_matrix[i][j] = BLACK;
 }
 
-void render() {
+void renderLedMatrix() {
   if (!was_changed) {
     return;
   }
@@ -175,7 +175,6 @@ void setNumberOne(COLORS color) {
                        setLED(2, 2, color);
                        setLED(2, 1, color);
   setLED(1, 0, color); setLED(2, 0, color); setLED(3, 0, color);
-  render();
 }
 
 void setNumberTwo(COLORS color) {
@@ -185,7 +184,6 @@ void setNumberTwo(COLORS color) {
   setLED(1, 2, color); setLED(2, 2, color); setLED(3, 2, color);
   setLED(1, 1, color);
   setLED(1, 0, color); setLED(2, 0, color); setLED(3, 0, color);
-  render();
 }
 
 void setNumberThree(COLORS color) {

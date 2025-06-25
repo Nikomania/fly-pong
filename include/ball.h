@@ -34,13 +34,13 @@ typedef struct Ball_t {
   SIDE_t side;
   int speed;
   int points[2];
-  int initializing;
 } Ball_t;
 
 extern Ball_t ball;
+extern bool change_side;
 
 void ball_init(SIDE_t side);
-SIDE_t ball_move();
+void ball_move();
 
 void game_tick();
 void game_render();

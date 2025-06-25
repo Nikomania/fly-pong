@@ -2,6 +2,7 @@
 #include "button.h"
 #include "led_matrix.h"
 #include "pico/rand.h"
+#include "oled.h"
 
 
 SIDE_t side;
@@ -17,10 +18,12 @@ Ball_t ball = {
     .points = {0, 0}
 };
 
+bool change_side = false;
+
 #ifdef MY_SIDE_FLY
-int initializing_acc = INIT_BALL_TICKS;
+static volatile int initializing_acc = INIT_BALL_TICKS;
 #else
-int initializing_acc = 0;
+static volatile int initializing_acc = 0;
 #endif
 
 void ball_init(SIDE_t side)
@@ -29,20 +32,28 @@ void ball_init(SIDE_t side)
     ball.y = INITIAL_BALL_Y;
     ball.dx = (get_rand_32() % 2 == 0) ? 1 : -1;
     if (ball.x == 0)
-        ball.dx = 1; // Garante que a bola não comece na borda esquerda
+        ball.dx = 1; // Garante que a bola não saia da tela
     else if (ball.x == LED_MATRIX_WIDTH - 1)
-        ball.dx = -1; // Garante que a bola não comece na borda direita
+        ball.dx = -1; // o mesmo
     ball.dy = INITIAL_BALL_DY;
     ball.speed = INITIAL_BALL_SPEED;
     ball.side = side;
     initializing_acc = INIT_BALL_TICKS;
 }
 
-SIDE_t ball_move() {
-    if (initializing_acc) {
+void ball_move() {
+    // Verifica se a bola saiu da tela
+    if (ball.y < 0) {
+        printf("Bola saiu da tela (ponto para pong)!\n");
+        ball.points[!side]++;
+        // Reinicia a posição da bola
+        ball_init(side);
+    }
+
+    if (initializing_acc > 0) {
         // Se a bola está inicializando, não faz nada
         initializing_acc--;
-        return ball.side; // Retorna o lado da bola sem fazer movimento
+        return;
     }
     // Atualiza a posição da bola
     ball.x += ball.speed * ball.dx;
@@ -53,19 +64,20 @@ SIDE_t ball_move() {
         ball.dx = -ball.dx; // Inverte a direção horizontal
     }
 
-    if (ball.y >= LED_MATRIX_HEIGHT) {
+    if (ball.y >= LED_MATRIX_HEIGHT && ball.dy > 0) {
+        change_side = true;
         ball.side = (ball.side == FLY) ? PONG : FLY; // Troca o lado da bola
-        ball.dy = -ball.dy; // Inverte a direção vertical
+        ball.dy = -1; // Faz a bola cair no lado correto
         ball.y = LED_MATRIX_HEIGHT - 1;
-        return ball.side; // Sai da função após a colisão
+        return; // Sai da função após a colisão
     }
 
     // Verifica colisão com a barra do jogador
-    if (ball.side == side && ball.y == bar_y+1) {
+    if (ball.y == bar_y+1) {
         for (int i = 0; i < BAR_SIZE; i++) {
             if (ball.x == bar_pos + i) {
                 ball.dy = -ball.dy; // Inverte a direção vertical ao colidir com a barra
-                return ball.side; // Sai da função após a colisão
+                return; // Sai da função após a colisão
             }
         }
         if (ball.x + ball.dx == bar_pos || ball.x + ball.dx == bar_pos + BAR_SIZE - 1) {
@@ -73,9 +85,6 @@ SIDE_t ball_move() {
             ball.dx = -ball.dx; // Inverte a direção horizontal se a bola está indo para a barra
         }
     }
-
-
-    return ball.side; // Retorna o lado da bola
 }
 
 void game_tick() {
@@ -106,13 +115,6 @@ void game_tick() {
     if (updating)
         ball_move();
     updating = !updating; 
-
-    // Verifica se a bola saiu da tela
-    if (ball.y < 0) {
-        ball.points[!side]++;
-        // Reinicia a posição da bola
-        ball_init(side);
-    }
 }
 
 void game_render() {
@@ -123,7 +125,7 @@ void game_render() {
     // Desenha a bola
     if (ball.side == side) {
         // Se a bola é do lado do jogador, desenha-a
-        setLED(ball.x, ball.y, initializing_acc ? YELLOW : WHITE);
+        setLED(ball.x, ball.y, initializing_acc > 0 ? YELLOW : WHITE);
     } else {
         // Se a bola é do lado do oponente, desenha-a em branco
         if (ball_on) {
@@ -140,6 +142,26 @@ void game_render() {
     }
 
     // Renderiza a matriz de LEDs
-    render();
+    renderLedMatrix();
+
+    clear_OLed();
+
+    char fly_points_str[17];
+    sprintf(fly_points_str, "%16d", ball.points[FLY]);
+    char pong_points_str[17];
+    sprintf(pong_points_str, "%16d", ball.points[PONG]);
+
+    char* texts[] = {
+        "     POINTS     ",
+        "                ",
+        "      FLY       ",
+        fly_points_str,
+        "                ",
+        "      PONG      ",
+        pong_points_str
+    };
+    print_lines_OLed(texts, 7, 0, 0);
+
+    render_OLed();
 }
 

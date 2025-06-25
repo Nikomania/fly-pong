@@ -34,7 +34,7 @@ void initLedMatrix();
 void setLED(const uint index_x, const uint index_y, const COLORS color);
 void setLEDs(const COLORS leds[LED_COUNT_X][LED_COUNT_Y]);
 void clearLEDs();
-void render();
+void renderLedMatrix();
 void clear();
 
 void setSmile(COLORS color);
